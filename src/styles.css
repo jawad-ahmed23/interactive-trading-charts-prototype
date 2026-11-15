@@ -22,8 +22,10 @@ button.active { color: var(--accent); background: rgba(76, 141, 255, 0.12); }
 input, select { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; }
 input:focus, select:focus { outline: 1px solid var(--accent); }
 
-.app { display: flex; flex-direction: column; height: 100%; }
-.toolbar { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: var(--panel); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.app { display: flex; flex-direction: column; height: 100%; height: 100dvh; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+.toolbar { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: var(--panel); border-bottom: 1px solid var(--border); min-width: 0; }
+.narrow-only { display: none; }
+select.compact { padding: 4px 6px; font-weight: 600; }
 .toolbar .group { display: flex; gap: 2px; padding-left: 8px; border-left: 1px solid var(--border); }
 .toolbar .tool { border-left: 1px solid var(--border); border-radius: 0 4px 4px 0; }
 .spacer { flex: 1; }
@@ -33,17 +35,19 @@ input:focus, select:focus { outline: 1px solid var(--accent); }
 
 .search { position: relative; }
 .search input { width: 170px; font-weight: 600; text-transform: uppercase; }
-.search-results { position: absolute; z-index: 20; top: calc(100% + 4px); left: 0; width: 340px; margin: 0; padding: 4px; list-style: none; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); }
+.search-results { position: absolute; z-index: 20; top: calc(100% + 4px); left: 0; width: min(340px, calc(100vw - 20px)); margin: 0; padding: 4px; list-style: none; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); }
 .search-results li { display: grid; grid-template-columns: 90px 1fr auto; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 4px; cursor: pointer; }
 .search-results li.active, .search-results li:hover { background: var(--panel-hover); }
 .badge { font-size: 10px; padding: 1px 6px; border-radius: 3px; background: rgba(76, 141, 255, 0.15); color: var(--accent); }
 .badge.warn { background: rgba(245, 165, 36, 0.15); color: var(--warn); }
 
 .chart-wrap { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.chart-canvas { flex: 1; min-height: 0; }
-.legend { position: absolute; z-index: 5; top: 6px; left: 10px; pointer-events: none; font-variant-numeric: tabular-nums; }
+.chart-canvas { flex: 1; min-height: 0; touch-action: none; }
+.legend { position: absolute; z-index: 5; top: 6px; left: 10px; right: 70px; pointer-events: none; font-variant-numeric: tabular-nums; }
+.legend-toggle { pointer-events: auto; padding: 0 6px; margin: 1px 0; font-size: 11px; color: var(--text-dim); background: rgba(21, 26, 35, 0.8); }
 .legend-row { display: flex; gap: 8px; align-items: center; padding: 1px 0; }
-.legend .ohlc { display: flex; gap: 8px; }
+.legend .ohlc { display: flex; gap: 8px; flex-wrap: wrap; }
+.legend-row { flex-wrap: wrap; }
 .legend .ind-label { color: var(--text-dim); pointer-events: auto; cursor: default; }
 .legend-actions { display: inline-flex; gap: 2px; visibility: hidden; pointer-events: auto; }
 .legend .ind-label:hover ~ .legend-actions, .legend-actions:hover { visibility: visible; }
@@ -56,7 +60,7 @@ input:focus, select:focus { outline: 1px solid var(--accent); }
 .dot.warn { background: var(--warn); }
 
 .modal-backdrop { position: fixed; inset: 0; z-index: 50; background: rgba(0, 0, 0, 0.5); display: grid; place-items: center; padding: 16px; }
-.modal { width: min(760px, 100%); max-height: 80vh; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5); }
+.modal { width: min(760px, 100%); max-height: 80vh; max-height: 80dvh; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5); }
 .modal-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--border); }
 .modal-head h2 { margin: 0; font-size: 15px; }
 .modal-body { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 12px 14px; overflow: auto; }
@@ -68,7 +72,48 @@ input:focus, select:focus { outline: 1px solid var(--accent); }
 .inputs { margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--border); }
 .field { display: grid; grid-template-columns: 1fr 120px; align-items: center; gap: 8px; margin: 6px 0; }
 
+/* Touch devices have no hover: always show the indicator actions, enlarge targets. */
+@media (hover: none) {
+  .legend-actions { visibility: visible; }
+  .legend-actions button { padding: 1px 7px; font-size: 12px; background: rgba(21, 26, 35, 0.75); }
+  .legend .indicator { background: rgba(14, 17, 23, 0.6); border-radius: 3px; width: fit-content; padding: 0 4px; }
+  .toolbar button, .toolbar select { min-height: 34px; }
+}
+
+/* Tablet: tighter toolbar. */
+@media (max-width: 1024px) {
+  .toolbar { gap: 6px; padding: 6px 8px; }
+  .toolbar .group { padding-left: 6px; }
+  .toolbar .group button { padding: 4px 6px; }
+  .search input { width: 130px; }
+}
+
+/* Phone: compact selects instead of button groups, one-row toolbar. */
 @media (max-width: 640px) {
+  :root { font-size: 12px; }
+  .wide-only, .wide-only-inline { display: none !important; }
+  .narrow-only { display: inline-block; }
+  .toolbar { gap: 6px; padding: 6px; }
+  .toolbar .tool { border-left: none; border: 1px solid var(--border); }
+  .search { flex: 1 1 auto; min-width: 0; }
+  .search input { width: 100%; min-width: 80px; font-size: 16px; /* 16px stops iOS zoom-on-focus */ }
+  .legend { top: 4px; left: 6px; right: 56px; font-size: 11px; }
+  .legend .ohlc { gap: 6px; }
+  .legend-time { display: none; }
+  .legend .dim { display: none; }
+  .realtime-btn { right: 64px; bottom: 44px; padding: 6px 10px; }
+  .status-bar { gap: 8px; padding: 3px 6px; }
+  .status-bar .tz { display: none; }
+  .modal-backdrop { padding: 0; place-items: stretch; }
+  .modal { width: 100%; max-height: none; height: 100%; border-radius: 0; border: none; }
   .modal-body { grid-template-columns: 1fr; }
-  .search input { width: 120px; }
+  .list li { padding: 8px 6px; }
+  .field { grid-template-columns: 1fr 110px; }
+  .field input, .field select { font-size: 16px; }
+}
+
+/* Very short landscape phones: give the chart every pixel. */
+@media (max-height: 420px) {
+  .status-bar { display: none; }
+  .legend-time { display: none; }
 }

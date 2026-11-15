@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { LegendState } from '../chart/ChartController';
 import { timeframeLabel } from '../feed/timeframe';
 import type { SymbolInfo, Timeframe } from '../feed/types';
@@ -17,8 +18,11 @@ export function Legend({ symbol, timeframe, info, state, onRemove, onEdit }: Pro
   const p = state?.precision ?? 2;
   const color = bar ? (bar.close >= bar.open ? THEME.up : THEME.down) : THEME.text;
   const f = (v: number) => v.toFixed(p);
+  // Phones start collapsed so indicator rows don't cover the candles.
+  const [collapsed, setCollapsed] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches);
+  const count = state?.indicators.length ?? 0;
   return (
-    <div className="legend">
+    <div className={`legend${collapsed ? ' collapsed' : ''}`}>
       <div className="legend-row">
         <strong>{symbol}</strong>
         <span className="dim">· {timeframeLabel(timeframe)} · {info?.venue ?? ''}</span>
@@ -38,8 +42,18 @@ export function Legend({ symbol, timeframe, info, state, onRemove, onEdit }: Pro
           </span>
         )}
       </div>
-      {bar && <div className="legend-row dim small">{state?.timeText}</div>}
-      {state?.indicators.map((ind) => (
+      {bar && <div className="legend-row dim small legend-time">{state?.timeText}</div>}
+      {count > 0 && (
+        <button
+          className="legend-toggle"
+          onClick={() => setCollapsed((c) => !c)}
+          aria-expanded={!collapsed}
+          title={collapsed ? 'Show indicator values' : 'Hide indicator values'}
+        >
+          {collapsed ? `▸ ${count} indicator${count > 1 ? 's' : ''}` : '▾'}
+        </button>
+      )}
+      {!collapsed && state?.indicators.map((ind) => (
         <div className="legend-row indicator" key={ind.instanceId}>
           <span className="ind-label">{ind.label}</span>
           {ind.values.map((v) => (

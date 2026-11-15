@@ -93,6 +93,8 @@ export class ChartController {
   private realtimeButton = false;
   private status: ChartStatus = { loading: false, historyLoading: false, historyExhausted: false, message: null, stream: null, barCount: 0 };
   private disposed = false;
+  private compact: boolean | null = null;
+  private readonly resizeObserver: ResizeObserver;
 
   constructor(
     container: HTMLElement,
@@ -148,6 +150,13 @@ export class ChartController {
       if (!this.info) return Promise.resolve({ bars: [], noMoreData: true });
       return this.feed.getBars(this.info, this.timeframe, { to, limit, signal });
     });
+
+    // Responsive: smaller axis text and right margin on narrow charts.
+    this.resizeObserver = new ResizeObserver(([entry]) => {
+      if (entry) this.applyCompact(entry.contentRect.width < 640);
+    });
+    this.resizeObserver.observe(container);
+    this.applyCompact(container.clientWidth < 640);
 
     this.chart.timeScale().subscribeVisibleLogicalRangeChange(this.onRange);
     this.chart.subscribeCrosshairMove(this.onCrosshair);
@@ -427,6 +436,15 @@ export class ChartController {
     this.chart.timeScale().applyOptions({ rightBarStaysOnScroll: true });
   };
 
+  private applyCompact(compact: boolean): void {
+    if (compact === this.compact) return;
+    this.compact = compact;
+    this.chart.applyOptions({
+      layout: { fontSize: compact ? 10 : 12 },
+      timeScale: { rightOffset: compact ? 3 : 8 },
+    });
+  }
+
   private setRealtimeButton(visible: boolean): void {
     if (visible === this.realtimeButton) return;
     this.realtimeButton = visible;
@@ -496,6 +514,7 @@ export class ChartController {
     window.removeEventListener('keydown', this.onKey);
     window.removeEventListener('keyup', this.onKey);
     window.removeEventListener('blur', this.onBlur);
+    this.resizeObserver.disconnect();
     this.chart.timeScale().unsubscribeVisibleLogicalRangeChange(this.onRange);
     this.chart.unsubscribeCrosshairMove(this.onCrosshair);
     this.chart.remove();

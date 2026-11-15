@@ -14,28 +14,55 @@ interface Props {
   onIndicators(): void;
 }
 
+const SCALE_LABELS: Record<ScaleMode, string> = { normal: 'Linear', log: 'Log', percent: '%' };
+
 export function Toolbar(p: Props) {
   return (
     <header className="toolbar">
       <SymbolSearch value={p.symbol} onSelect={p.onSymbol} />
-      <div className="group" role="group" aria-label="Timeframe">
+      {/* Wide screens: button groups. Narrow screens: compact selects (CSS decides). */}
+      <div className="group wide-only" role="group" aria-label="Timeframe">
         {TIMEFRAMES.map((tf) => (
           <button key={tf} className={tf === p.timeframe ? 'active' : ''} onClick={() => p.onTimeframe(tf)}>
             {timeframeLabel(tf)}
           </button>
         ))}
       </div>
-      <button className="tool" onClick={p.onIndicators}>
-        ƒx Indicators
+      <select
+        className="narrow-only compact"
+        aria-label="Timeframe"
+        value={p.timeframe}
+        onChange={(e) => p.onTimeframe(e.target.value as Timeframe)}
+      >
+        {TIMEFRAMES.map((tf) => (
+          <option key={tf} value={tf}>
+            {timeframeLabel(tf)}
+          </option>
+        ))}
+      </select>
+      <button className="tool" onClick={p.onIndicators} aria-label="Indicators" title="Indicators">
+        ƒx<span className="wide-only-inline"> Indicators</span>
       </button>
       <div className="spacer" />
-      <div className="group" role="group" aria-label="Price scale">
-        {(['normal', 'log', 'percent'] as ScaleMode[]).map((m) => (
+      <div className="group wide-only" role="group" aria-label="Price scale">
+        {(Object.keys(SCALE_LABELS) as ScaleMode[]).map((m) => (
           <button key={m} className={m === p.scaleMode ? 'active' : ''} onClick={() => p.onScaleMode(m)}>
-            {m === 'normal' ? 'Linear' : m === 'log' ? 'Log' : '%'}
+            {SCALE_LABELS[m]}
           </button>
         ))}
       </div>
+      <select
+        className="narrow-only compact"
+        aria-label="Price scale"
+        value={p.scaleMode}
+        onChange={(e) => p.onScaleMode(e.target.value as ScaleMode)}
+      >
+        {(Object.keys(SCALE_LABELS) as ScaleMode[]).map((m) => (
+          <option key={m} value={m}>
+            {SCALE_LABELS[m]}
+          </option>
+        ))}
+      </select>
     </header>
   );
 }
@@ -85,7 +112,10 @@ function SymbolSearch({ value, onSelect }: { value: string; onSelect(s: string):
       <input
         aria-label="Symbol search"
         value={open ? query : value}
-        placeholder="Search symbol"
+        placeholder="Symbol"
+        inputMode="search"
+        autoComplete="off"
+        spellCheck={false}
         onFocus={() => {
           setOpen(true);
           setActive(0);

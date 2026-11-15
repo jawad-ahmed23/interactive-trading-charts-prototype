@@ -102,7 +102,7 @@ export function ChartView({ symbol, timeframe, scaleMode, indicators, onRemoveIn
         {info?.isMock && <span className="badge warn">MOCK DATA</span>}
         <span className="dim">{status?.barCount ?? 0} bars</span>
         <span className={`dot ${stream === 'open' ? 'ok' : stream === 'reconnecting' ? 'warn' : 'off'}`} title={`Stream: ${stream ?? 'idle'}`} />
-        <span className="dim">{info?.timezone === 'UTC' ? 'UTC' : info?.timezone}</span>
+        <span className="dim tz">{info?.timezone === 'UTC' ? 'UTC' : info?.timezone}</span>
       </div>
     </div>
   );
